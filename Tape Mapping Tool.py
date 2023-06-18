@@ -10,6 +10,8 @@ from sqlalchemy import create_engine
 
 
 global qrm_db  #create engine
+global wb_path, wb, dest_columns_sheet, tape_sheet, dest_field_values_sheet, \
+    values_mapping_sheet
 qrm_db = create_engine('mssql+pyodbc://CFAWSQRMSQL01/Servicing?driver=SQL+Server+Native+Client+11.0',
     fast_executemany = True)
 
@@ -33,17 +35,11 @@ def read_TMT():
     
     ####Load Tape Mapping Tool Excel File
     print('Loading Excel File...')
-    global wb_path
     wb_path = 'I:/ServicingMSR/QRM/Trades Upload Files/Tape Mapping Tool/Tape Mapping Tool.xlsx'
-    global wb
     wb = xl.load_workbook(wb_path)
-    global dest_columns_sheet
     dest_columns_sheet = wb['Destination Columns']
-    global tape_sheet
     tape_sheet = wb['Tape']
-    global dest_field_values_sheet
     dest_field_values_sheet = wb['Destination Field Values']
-    global values_mapping_sheet
     values_mapping_sheet = wb['ValuesMapping']
 
     #Find the last used row on the Excel sheet
@@ -395,11 +391,8 @@ def open_field_map_window():
     
     #temporarily showing this at the top
     row_num = 1
-    button = tk.Button(field_map_window, text="Save Mapping Rules", command=open_save_load_field_mappings_window)    
-    # button.grid(row=row_num, column=0, columnspan=2)
-    button.grid(row=row_num, column=1)
-    
-    row_num = 2
+
+    row_num = 1
     #create a "combos" list
     global column_mapping_rules
     column_mapping_rules = []
@@ -475,9 +468,14 @@ def open_field_map_window():
     # button.grid(row=row_num, column=0, columnspan=2)
     button.grid(row=row_num, column=0)
 
-    
+    button = tk.Button(field_map_window, text="Save Mapping Rules", command=open_save_load_field_mappings_window)    
+    # button.grid(row=row_num, column=0, columnspan=2)
+    button.grid(row=row_num, column=1)
+
     button = tk.Button(field_map_window, text="Open Value Mapping Rules Window", command=open_value_mappings_window)
     button.grid(row=row_num, column=3, columnspan=2)
+    
+
     
 
 MainNavWindow = tk.Tk()
