@@ -1,6 +1,13 @@
 #https://customtkinter.tomschimansky.com/documentation/
 #https://github.com/tomschimansky/customtkinter
 
+
+#approach:
+    #get field mapping window loaded, no button functionality
+    #move to seperate files
+    #keep building
+    #build functionality for base tool as needed
+
 import customtkinter
 import tkinter as tk
 import openpyxl as xl
@@ -95,26 +102,13 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
                                             font=customtkinter.CTkFont(size=20, weight="bold"))
         self.label.grid(row=0, column=2, padx=20)
                
-        self.label = customtkinter.CTkLabel(self, text = "Source Column...........", \
+        self.label = customtkinter.CTkLabel(self, text = "Source Column", \
                                             font=customtkinter.CTkFont(size=20, weight="bold"))
         self.label.grid(row=0, column=3, padx=20)
-        
-        # self.combo1 = customtkinter.CTkComboBox(self, values=["Option 1", "Option 2", "Option 3"])
-        # self.combo2 = customtkinter.CTkComboBox(self, values=["Option A", "Option B", "Option C"])
-        # self.combo3 = customtkinter.CTkComboBox(self, values=["Choice X", "Choice Y", "Choice Z"])
-        # self.combo4 = customtkinter.CTkComboBox(self, values=["Item 1", "Item 2", "Item 3"])
-        # self.combo5 = customtkinter.CTkComboBox(self, values=["Value A", "Value B", "Value C"])
-
-        # self.combo1.grid(row=2, column=4, padx=10, pady=5)
-        # self.combo2.grid(row=3, column=4, padx=10, pady=5)
-        # self.combo3.grid(row=4, column=4, padx=10, pady=5)
-        # self.combo4.grid(row=5, column=4, padx=10, pady=5)
-        # self.combo5.grid(row=6, column=4, padx=10, pady=5)
-
-        
-        # self.label = customtkinter.CTkLabel(self, text = "Special", \
-        #                                     font=customtkinter.CTkFont(size=20, weight="bold"))
-        # self.label.grid(row=0, column=4, padx=20)
+              
+        self.label = customtkinter.CTkLabel(self, text = "Special", \
+                                            font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.label.grid(row=0, column=4, padx=20)
         
         #temporarily showing this at the top
         # row_num = 1
@@ -155,48 +149,45 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
             self.combobox_var = customtkinter.StringVar()
             self.combo = customtkinter.CTkComboBox(self, variable=self.combobox_var, \
                                               values=list(app.navigation_frame.source_column_names), \
-                                                  state ="readonly", width = 100)
+                                                  state ="readonly")
             self.combo.grid(row=row_num, column=3)
             
-            #problems:
-                #controlling combox box height
-                #hiding the combobox arrow
-                #no combobox tab functionality
-            
-            # combo = ttk.Combobox(self, values=list(app.navigation_frame.source_column_names), width=40, state ="readonly",height = 20)
-            # #combo = ttk.Combobox(field_map_window, textvariable=var, values=list(source_column_names), width=40,height = 20)
-            # combo.grid(row=row_num, column=4)
-            
-            
+              
             # combo.bind('<KeyPress>', keyboard_first_letter_select)
                
-            # # Check if any of the source column names match "item" and set it as the default value
-            # #comment this out if you don't want the default matching
-            # for source_column_name in app.navigation_frame.source_column_names:
-            #     if source_column_name.lower() == item.lower():
-            #         var.set(source_column_name)
-            #         break
+            # Check if any of the source column names match "item" and set it as the default value
+            #comment this out if you don't want the default matching
+            for source_column_name in app.navigation_frame.source_column_names:
+                if source_column_name.lower() == item.lower():
+                    self.combobox_var.set(source_column_name)
+                    break
             
-            # if child_dictionary['is_percentage'] == True:
-            #     # Create a variable to hold the state of the checkbox
-            #     DivideBy100Var = tk.BooleanVar()
-            #     # Create the checkbox
-            #     checkbox = tk.Checkbutton(self, text='Divide by 100?', var=DivideBy100Var)
-            #     checkbox.grid(row=row_num, column=4)
-            #     self.DivideBy100Vars.append(DivideBy100Var) # Add the DivideBy100Var to the DivideBy100Vars list
-            #     # DivideBy100Checkboxes.append(checkbox)
-            # elif item == 'Delq':
-            #     AllCurrentVar = tk.BooleanVar()
-            #     checkbox = tk.Checkbutton(self, text='All Current?', var=AllCurrentVar)
-            #     checkbox.grid(row=row_num, column=4)
-            #     self.DivideBy100Vars.append(False)
-            #     # DivideBy100Checkboxes.append(False)
-            # else:
-            #     self.DivideBy100Vars.append(False)
-            #     # DivideBy100Checkboxes.append(False)
+            # check_var = customtkinter.StringVar(value="on")
+            # checkbox = customtkinter.CTkCheckBox(app, text="CTkCheckBox", command=checkbox_event,
+            #                          variable=check_var, onvalue="on", offvalue="off")
             
-            # #add destination column, the selected variable, and whether or not the column requires mapping to the "column_mapping_rules" list
-            # self.column_mapping_rules.append((item, var, child_dictionary['requires_mapping'],child_dictionary['is_percentage'])) #adds item, var, and requires mapping as as tupple
+            
+            if child_dictionary['is_percentage'] == True:
+                # Create a variable to hold the state of the checkbox
+                self.DivideBy100Var = tk.BooleanVar()
+                # Create the checkbox
+                self.checkbox = customtkinter.CTkCheckBox(self, text='Divide by 100?', variable=self.DivideBy100Var)
+                self.checkbox.grid(row=row_num, column=4)
+                self.DivideBy100Vars.append(self.DivideBy100Var) # Add the DivideBy100Var to the DivideBy100Vars list
+            elif item == 'Delq':
+                self.AllCurrentVar = tk.BooleanVar()
+                checkbox = customtkinter.CTkCheckBox(self, text='All Current?', variable=self.AllCurrentVar)
+                checkbox.grid(row=row_num, column=4)
+                self.DivideBy100Vars.append(False)
+
+            else:
+                self.DivideBy100Vars.append(False)
+
+            
+            #add destination column, the selected variable, and whether or not the column requires mapping to the "column_mapping_rules" list
+            self.column_mapping_rules.append((item, self.combobox_var, \
+                                              child_dictionary['requires_mapping'],\
+                                                  child_dictionary['is_percentage'])) #adds item, var, and requires mapping as as tupple
             
             row_num += 1
             
@@ -221,7 +212,7 @@ class App(customtkinter.CTk):
         super().__init__()
 
         self.title("Tape Mapping Tool")
-        self.geometry("1500x700x5x5")
+        self.geometry("700x700x5x5")
         self.grid_rowconfigure(0, weight=1)  # configure grid system
         self.grid_columnconfigure(1,weight = 1) 
         self.navigation_frame  = NavigationFrame(master=self)
