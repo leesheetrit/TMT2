@@ -6,23 +6,29 @@ Created on Sun Jun 18 20:48:10 2023
 """
 import customtkinter
 import tkinter as tk
-
+import datetime
 
 
 class FieldMappingFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, destination_columns, source_columns, **kwargs):
         super().__init__(master, **kwargs)
         
+        print('FieldMappingFrame class intiated')
         #Attributes
         self.column_mapping_rules = []
         self.DivideBy100Vars = []
         self.AllCurrentVar = None 
-        
+        self.destination_columns = destination_columns
+        # print(destination_columns)
+        self.source_columns = source_columns
+        print(self.source_columns)
+        self.column_mapping_rules = []
         #Call Methods
-        self.generate_labels()
+        self.generate_headers()
         self.generate_mapping_widgets()
-
-    def generate_labels(self):
+        
+    
+    def generate_headers(self):
         # add widgets onto the frame, for example:
         labels_data = [
         ("Destination Column", 0),
@@ -35,14 +41,10 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
             label = customtkinter.CTkLabel(self, text=text, font=customtkinter.CTkFont(size=20, weight="bold"))
             label.grid(row=0, column=column, padx=20)
 
-     
-    #this should be a class
-    #with a label
-    
     def generate_mapping_widgets(self):
         row_num = 2
         #method to be: generate mapping rows
-        for item, child_dictionary in app.navigation_frame.destination_columns.items():
+        for item, child_dictionary in self.destination_columns.items():
             # Create a label and combo box for each Destination Column in the "destination_columns" 
                  
             self.label = customtkinter.CTkLabel(self, text=item)
@@ -57,14 +59,14 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
             self.label3.grid(row=row_num, column=2)
             
             self.combobox_var = customtkinter.StringVar()
-            self.combo = customtkinter.CTkComboBox(self, variable=self.combobox_var, values=list(app.navigation_frame.source_column_names), state="readonly")
+            self.combo = customtkinter.CTkComboBox(self, variable=self.combobox_var, values=list(self.source_columns), state="readonly")
             self.combo.grid(row=row_num, column=3)
          
             # combo.bind('<KeyPress>', keyboard_first_letter_select)
                
             # Check if any of the source column names match "item" and set it as the default value
             #comment this out if you don't want the default matching
-            for source_column_name in app.navigation_frame.source_column_names:
+            for source_column_name in self.source_columns:
                 if source_column_name.lower() == item.lower():
                     self.combobox_var.set(source_column_name)
                     break
@@ -89,24 +91,86 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
             self.column_mapping_rules.append((item, self.combobox_var, \
                                               child_dictionary['requires_mapping'],\
                                                   child_dictionary['is_percentage'])) #adds item, var, and requires mapping as as tupple
-            
+ 
             row_num += 1
             
+           
         print('Labels created')
 
-        # # Create a button to trigger the write_selections function
-        # # button = customtkinter.CTkButton(self, text="Implement Field Mapping Rules", command=write_field_mappings)
-        # button = customtkinter.CTkButton(self, text="Implement Field Mapping Rules")
-        # # button.grid(row=row_num, column=0, columnspan=2)
-        # button.grid(row=row_num, column=0)
+        #don't think I need this button
+        button = customtkinter.CTkButton(self, text="Save Field Mapping Rules")
+        button.grid(row=row_num, column=0)
 
+        button = customtkinter.CTkButton(self, text="Implement Field Mapping Rules")
+        button.grid(row=row_num, column=1)
+
+        button = customtkinter.CTkButton(self, text="Write Field Mapping Rules to Database")
+        button.grid(row=row_num, column=2)
         
         # # button = customtkinter.CTkButton(self, text="Open Value Mapping Rules Window", command=open_value_mappings_window)
         # button = customtkinter.CTkButton(self, text="Open Value Mapping Rules Window")
         # button.grid(row=row_num, column=3, columnspan=2)
         
         ####Load Tape Mapping Tool Excel File
-        # button = tk.Button(field_map_window, text="Save Mapping Rules", command=open_save_load_field_mappings_window)    
+        # button = customtkinter.CTkButton(self, text="Save Mapping Rules", command=open_save_load_field_mappings_window)    
         # # button.grid(row=row_num, column=0, columnspan=2)
         # button.grid(row=row_num, column=1)
         
+        print('Field Mapping Frame Loaded')
+        
+    def get_field_mappings(self):
+        return self.column_mapping_rules
+
+if __name__ == "__main__":
+    print('in test mode')
+    
+    #generate tk window
+    #call the frame sending it a static destination columns and source coulmns 
+    # customtkinter.set_appearance_mode("dark")
+    # app = App()
+    # app.mainloop()
+    
+    # destination_columns = {
+    # 'LOAN NUMBER': {'requires_mapping': 'FALSE', 'dest_value_example': 1464829561, 'is_percentage': 'FALSE'},
+    # 'ORIGINAL MORTGAGE AMOUNT': {'requires_mapping': 'FALSE', 'dest_value_example': 139425, 'is_percentage': 'FALSE'},
+    # 'INVESTOR HEADER': {'requires_mapping': 'TRUE', 'dest_value_example': 'GNMA', 'is_percentage': 'FALSE'},
+    # 'REMIT TYPE': {'requires_mapping': 'TRUE', 'dest_value_example': 'GNMA II', 'is_percentage': 'FALSE'},
+    # 'LO TYPE DESCRIPTION': {'requires_mapping': 'TRUE', 'dest_value_example': 'FHA RESIDENTIAL', 'is_percentage': 'FALSE'},
+    # 'FIRST PRINCIPAL BALANCE': {'requires_mapping': 'FALSE', 'dest_value_example': 12.99, 'is_percentage': 'FALSE'},
+    # 'T AND I MONTHLY AMOUNT': {'requires_mapping': 'FALSE', 'dest_value_example': 231.5, 'is_percentage': 'FALSE'},
+    # 'ESCROWED INDICATOR': {'requires_mapping': 'TRUE', 'dest_value_example': 'Y', 'is_percentage': 'FALSE'},
+    # 'LOAN TERM': {'requires_mapping': 'FALSE', 'dest_value_example': 360, 'is_percentage': 'FALSE'},
+    # 'ARM PLAN ID': {'requires_mapping': 'TRUE', 'dest_value_example': 'SOF5', 'is_percentage': 'FALSE'},
+    # 'FIRST DUE DATE': {'requires_mapping': 'FALSE', 'dest_value_example': datetime.datetime(2020, 9, 1, 0, 0), 'is_percentage': 'FALSE'},
+    # 'INTEREST PAID THROUGH DATE': {'requires_mapping': 'FALSE', 'dest_value_example': datetime.datetime(2023, 2, 1, 0, 0), 'is_percentage': 'FALSE'},
+    # 'LOAN MATURES DATE': {'requires_mapping': 'FALSE', 'dest_value_example': datetime.datetime(2050, 8, 1, 0, 0), 'is_percentage': 'FALSE'},
+    # 'LOAN CLOSING DATE': {'requires_mapping': 'FALSE', 'dest_value_example': datetime.datetime(2020, 7, 29, 0, 0), 'is_percentage': 'FALSE'},
+    # 'ANNUAL INTEREST RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.03, 'is_percentage': True},
+    # 'NET SERV FEE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.005, 'is_percentage': True},
+    # 'PROPERTY ALPHA STATE CODE': {'requires_mapping': 'FALSE', 'dest_value_example': 'TN', 'is_percentage': 'FALSE'},
+    # 'PROPERTY TYPE FNMA CODE DESCRIPTION': {'requires_mapping': 'TRUE', 'dest_value_example': 'SINGLE FAMILY DETACHED', 'is_percentage': 'FALSE'},
+    # 'ORIG LOAN TO VALUE RATIO': {'requires_mapping': 'FALSE', 'dest_value_example': 0.982, 'is_percentage': True},
+    # 'LOAN TO VALUE RATIO': {'requires_mapping': 'FALSE', 'dest_value_example': 0, 'is_percentage': True},
+    # 'LOAN PURPOSE CODE DESCRIPTION': {'requires_mapping': 'TRUE', 'dest_value_example': 'PURCHASE', 'is_percentage': 'FALSE'},
+    # 'OCCUPANCY CODE DESCRIPTION': {'requires_mapping': 'TRUE','dest_value_example': 'OWNER OCCUPANCY', 'is_percentage': 'FALSE'},
+    # 'CS BORR CREDIT QUALITY CODE': {'requires_mapping': 'FALSE', 'dest_value_example': '635', 'is_percentage': 'FALSE'},
+    # 'PREPAY PENALTY INDICATOR': {'requires_mapping': 'TRUE', 'dest_value_example': 'N', 'is_percentage': 'FALSE'},
+    # 'FORECLOSURE STOP CODE DESCRIPTION': {'requires_mapping': 'TRUE', 'dest_value_example': 'NORMAL PROCESSING', 'is_percentage': 'FALSE'},
+    # 'ARM IR MARGIN RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.0275, 'is_percentage': True},
+    # 'ARM IR MAX LIFE FLOOR RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.0275, 'is_percentage': True},
+    # 'ARM IR MAX LIFE CEILING RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.09125, 'is_percentage': True},
+    # 'ARM INDEX CODE 1 DESCRIPTION': {'requires_mapping': 'TRUE', 'dest_value_example': '30 DAY AVERAGE SOFR', 'is_percentage': 'FALSE'},
+    # 'ARM IR MAX INCREASE RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.02, 'is_percentage': True},
+    # 'ARM IR MAX DECREASE RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.01375, 'is_percentage': True},
+    # 'ARM IR CHANGE PERIOD': {'requires_mapping': 'FALSE', 'dest_value_example': 6, 'is_percentage': 'FALSE'},
+    # 'ARM NEXT PI CALC DATE': {'requires_mapping': 'FALSE', 'dest_value_example': datetime.datetime(2027, 11, 1, 0, 0), 'is_percentage': 'FALSE'},
+    # 'MP GUARANTY FEE RATE': {'requires_mapping': 'FALSE', 'dest_value_example': 0.06, 'is_percentage': 'FALSE'},
+    # 'ACTIVE PANDEMIC FORBEARANCE': {'requires_mapping': 'TRUE', 'dest_value_example': 0, 'is_percentage': 'FALSE'},
+    # 'Delq': {'requires_mapping': 'TRUE', 'dest_value_example': 'PREPAID OR CURRENT', 'is_percentage': 'FALSE'},
+    # 'DTI': {'requires_mapping': 'FALSE', 'dest_value_example': 0.151466268, 'is_percentage': True},
+    # 'Division': {'requires_mapping': 'TRUE', 'dest_value_example': 'RETAIL', 'is_percentage': 'FALSE'},
+    # 'Refi Type': {'requires_mapping': 'TRUE', 'dest_value_example': 0, 'is_percentage': 'FALSE'}}
+    
+    
+
+
