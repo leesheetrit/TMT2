@@ -14,6 +14,7 @@ from FieldMappingFrame import FieldMappingFrame
 from ValueMappingFrame import ValueMappingFrame
 from FieldMappingToDBFrame import FieldMappingToDBFrame
 from sqlalchemy import create_engine
+#import sql_library
 
 class NavigationFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
@@ -23,11 +24,16 @@ class NavigationFrame(customtkinter.CTkFrame):
         #Lavel
         widgets.append(customtkinter.CTkLabel(self, text="Navigation Window"))
         #Buttons
+        
         widgets.append(customtkinter.CTkButton(self, text="Read Excel TMT File", \
-                                               command=self.master.read_excel_TMT))
-            
+                                               command=self.master.reset_TMT))
+        
+        widgets.append(customtkinter.CTkButton(self, text="Read Excel TMT File", \
+                                               command=self.master.read_excel_TMT))    
         widgets.append(customtkinter.CTkButton(self, text="Open Field Mappings Window", \
                                                command=self.master.open_field_mapping_frame))
+        widgets.append(customtkinter.CTkButton(self, text="Open Field Mappings Window w/ Smart Match", \
+                                                   command=self.master.open_field_mapping_frame_smart))
         widgets.append(customtkinter.CTkButton(self, text="Write Field Mappings to xls", \
                                               command=self.master.write_field_mappings))
             
@@ -71,8 +77,18 @@ class App(customtkinter.CTk):
         self.sellers_name = ''
         self.mappings_name = ''
         
+        self.wb_path = 'I:/ServicingMSR/QRM/Trades Upload Files/Tape Mapping Tool/Tape Mapping Tool.xlsx'
+        self.wb = xl.load_workbook(self.wb_path)
+        self.dest_columns_sheet = self.wb['Destination Columns']
+        self.tape_sheet = self.wb['Tape']
+        self.dest_field_values_sheet = self.wb['Destination Field Values']
+        self.values_mapping_sheet = self.wb['ValuesMapping']
+        
         self.qrm_db= create_engine('mssql+pyodbc://CFAWSQRMSQL01/Servicing?driver=SQL+Server+Native+Client+11.0',
             fast_executemany = True)
+        
+    def reset_TMT(self):
+        pass
     
     def read_excel_TMT(self):
         print('Reading Excel TMT...')
@@ -80,13 +96,7 @@ class App(customtkinter.CTk):
         print('Excel TMT Read')
         #to be: call excel loaded class
         
-        print('Loading Excel File...')
-        self.wb_path = 'I:/ServicingMSR/QRM/Trades Upload Files/Tape Mapping Tool/Tape Mapping Tool.xlsx'
-        self.wb = xl.load_workbook(self.wb_path)
-        self.dest_columns_sheet = self.wb['Destination Columns']
-        self.tape_sheet = self.wb['Tape']
-        self.dest_field_values_sheet = self.wb['Destination Field Values']
-        self.values_mapping_sheet = self.wb['ValuesMapping']
+
         #Find the last used row on the Excel sheet
         print('Finding Last Row on Tape File...')
         self.last_row = self.tape_sheet.max_row
@@ -130,11 +140,18 @@ class App(customtkinter.CTk):
                                                  destination_columns=self.destination_columns, \
                                                      source_columns =  self.source_columns_sorted )
         self.work_bench_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+         
+        self.column_mappings_rules = self.work_bench_frame.get_field_mappings()
         
-        #thinking about a buttons frame at the bottom
-        # self.work_buttons_frame = customtkinter.CTkFrame(master=self)
-        # self.work_buttons_frame.grid(row=2, column=1, padx=20, pady=20, height = 10, sticky="sew")
-        
+    def open_field_mapping_frame_smart(self):
+        print('OpenFieldMappingFrame Method Activated')
+        self.work_bench_frame= FieldMappingFrame(master=self,\
+                                                 destination_columns=self.destination_columns, \
+                                                     source_columns =  self.source_columns_sorted,
+                                                     smart_match = True,\
+                                                         qrm_db = self.qrm_db)
+        self.work_bench_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+         
         self.column_mappings_rules = self.work_bench_frame.get_field_mappings()
         
     def write_field_mappings (self):
@@ -152,7 +169,7 @@ class App(customtkinter.CTk):
                     print(f"DivideBy100Vars: Index: {idx}, Value: {var.get()}")      
             i=-1
             # Write the destination column names going across the columns of last_row
-            for i, (item, var, requires_mapping,is_percentage) in enumerate(self.column_mappings_rules):
+            for i, (item, var, requires_mapping,is_percentage, hard_code) in enumerate(self.column_mappings_rules):
               self.tape_sheet.cell(row=self.last_row+2, column=i+1).value = item
             print('Destination Column Labels writted into XLS')
             
@@ -160,7 +177,7 @@ class App(customtkinter.CTk):
             row = self.last_row + 3
             # Skip to the next row and write the associated source column formulas or mappings across that row, one per column
             print('All Loans are Current equals:', self.AllCurrentVar.get())
-            for i, (item, var, requires_mapping,is_percentage) in enumerate(self.column_mappings_rules):
+            for i, (item, var, requires_mapping,is_percentage,hard_code) in enumerate(self.column_mappings_rules):
                 col_letter = None
                 for letter, name in self.source_columns.items():
                     if name == var.get():
@@ -168,18 +185,26 @@ class App(customtkinter.CTk):
                         break
                     
                 print('Evaluating logic for',item,'All current: ',self.AllCurrentVar.get(), "i equals ", i)
-
-                if self.DivideBy100Vars[i] is False:
-                    #no checkbox for this item
-                    print(f"Item: {item}, Index: {i}, DivideBy100Vars Checkbox Value: {self.DivideBy100Vars[i]}")
-                else:
-                    #read whether the checkbox was checked or not
-                    print(f"Item: {item},  Index: {i},DivideBy100Vars Checkbox Value: {self.DivideBy100Vars[i].get()}")
+                print('Evaluating logic for',item,'Hard Code: ',hard_code.get())
+                
+                # if self.DivideBy100Vars[i] is False:
+                #     #no checkbox for this item
+                #     print(f"Item: {item}, Index: {i}, DivideBy100Vars Checkbox Value: {self.DivideBy100Vars[i]}")
+                # else:
+                #     #read whether the checkbox was checked or not
+                #     print(f"Item: {item},  Index: {i},DivideBy100Vars Checkbox Value: {self.DivideBy100Vars[i].get()}")
                      
                 #if a source column is selected
-                if col_letter is not None or (item =='Delq' and self.AllCurrentVar.get()):
+                #or delinquent and all current
+                #or there is hard code
+                if col_letter is not None \
+                    or (item =='Delq' and self.AllCurrentVar.get())\
+                        or hard_code.get() != '':
+                #if col_letter is not None or (item =='Delq' and self.AllCurrentVar.get()):
                     #if the checkbox for all curent is checked
-                    if item == "Delq" and self.AllCurrentVar.get():
+                    if hard_code.get() != '':
+                        formula =  hard_code.get()
+                    elif item == "Delq" and self.AllCurrentVar.get():
                         #write all current
                         formula = "PREPAID OR CURRENT"
                     elif requires_mapping== 'TRUE' and col_letter is not None:
@@ -208,13 +233,16 @@ class App(customtkinter.CTk):
         self.field_mappings_to_db_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
     
     def save_field_mappings_to_db(self):
+        
+        #1) not quite working, only seems to be writing FIRST Due to First Due
+        
+        print('in method save_field_mappings_to_db')
         self.sellers_name = self.field_mappings_to_db_frame.get_seller_name()
+        print (self.sellers_name)
         self.mappings_name = self.field_mappings_to_db_frame.get_mapping_name()
-        
-        # self.column_mappings_rules = self.work_bench_frame.get_field_mappings()
-        
-        #not quite working, write PY_VAR849 instead of source field name
-        for i, (dest_field, source_field, requires_mapping,is_percentage) in enumerate(self.column_mapping_rules):
+        print (self.mappings_name)
+           
+        for i, (dest_field, source_field, requires_mapping,is_percentage, hard_code) in enumerate(self.column_mappings_rules):
            
             if source_field.get() is not None and source_field.get() != "":
                 insert_query = f"INSERT INTO Servicing.dbo.TMT_Field_Mappings \
@@ -224,7 +252,7 @@ class App(customtkinter.CTk):
                 self.qrm_db.connect().execute(insert_query)
                 print('Wrote: ', dest_field,' - ', source_field.get())
         
-        print('Field Mappings Save Complete')
+        print('Field Mappings Written to Database')
     
     def open_value_mapping_frame(self):
         print('OpeValueMappingFrame Method Activated')
