@@ -7,10 +7,12 @@ Created on Sun Jun 18 20:48:10 2023
 import customtkinter
 import tkinter as tk
 import datetime
+from tkinter import ttk
+import sqlalchemy
 
 
 class FieldMappingFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, destination_columns, source_columns, **kwargs):
+    def __init__(self, master, destination_columns, source_columns, smart_match = False, qrm_db = '',**kwargs):
         super().__init__(master, **kwargs)
         
         print('FieldMappingFrame class intiated')
@@ -23,11 +25,25 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
         self.source_columns = source_columns
         print(self.source_columns)
         self.column_mapping_rules = []
+        self.smart_match = smart_match
+        self.qrm_db = qrm_db
+        
         #Call Methods
+        if self.smart_match:
+            self.query_past_mappings()
+            
         self.generate_headers()
         self.generate_mapping_widgets()
+
+    def query_past_mappings(self):
+        self.query = "SELECT Destination_Field, Source_Field FROM Servicing.dbo.TMT_Field_Mappings"
+        self.query_result = self.qrm_db.connect().execute(self.query)
+        self.past_mappings = [(row['Destination_Field'], row['Source_Field']) for row in self.query_result]
         
-    
+        print("Past Mappings", self.past_mappings)
+
+        
+        
     def generate_headers(self):
         # add widgets onto the frame, for example:
         labels_data = [
@@ -35,13 +51,16 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
         ("Requires Mapping", 1),
         ("One Loan Example", 2),
         ("Source Column", 3),
-        ("Special", 4)]
+        ("Special", 4),
+        ('Hard Code Value', 5)]
         
         for text, column in labels_data:
             label = customtkinter.CTkLabel(self, text=text, font=customtkinter.CTkFont(size=20, weight="bold"))
             label.grid(row=0, column=column, padx=20)
+            
 
     def generate_mapping_widgets(self):
+        
         row_num = 2
         #method to be: generate mapping rows
         for item, child_dictionary in self.destination_columns.items():
@@ -59,9 +78,24 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
             self.label3.grid(row=row_num, column=2)
             
             self.combobox_var = customtkinter.StringVar()
-            self.combo = customtkinter.CTkComboBox(self, variable=self.combobox_var, values=list(self.source_columns), state="readonly")
+            #not sure if I want to use this or not
+            # self.combo = customtkinter.CTkComboBox(self, variable=self.combobox_var, \
+                                                   # values=list(self.source_columns), state="readonly", width = 400)
+            self.combo = ttk.Combobox(self, textvariable=self.combobox_var, \
+                                                       values=list(self.source_columns), state="readonly", width = 40, height = 20)
+            # self.combo.configure(postcommand=self.limit_combobox_height)
             self.combo.grid(row=row_num, column=3)
-         
+            
+            if self.smart_match:
+                for past_destination, past_source in self.past_mappings:
+                   if past_destination == item and past_source in self.source_columns:
+                       self.combobox_var.set(past_source)
+                       break
+            
+            # self.combo.bind('<<ComboboxSelected>>', combobox_selected)
+            self.combo.focus_set()
+            self.combo.bind('<KeyPress>', self.keyboard_first_letter_select)
+     
             # combo.bind('<KeyPress>', keyboard_first_letter_select)
                
             # Check if any of the source column names match "item" and set it as the default value
@@ -87,40 +121,49 @@ class FieldMappingFrame(customtkinter.CTkScrollableFrame):
             else:
                 self.DivideBy100Vars.append(False)
         
+            self.hard_code_var = customtkinter.StringVar()
+            self.hard_code = customtkinter.CTkEntry(self, textvariable = self.hard_code_var)
+            self.hard_code.grid(row=row_num, column=5)
+        
             #add destination column, the selected variable, and whether or not the column requires mapping to the "column_mapping_rules" list
             self.column_mapping_rules.append((item, self.combobox_var, \
                                               child_dictionary['requires_mapping'],\
-                                                  child_dictionary['is_percentage'])) #adds item, var, and requires mapping as as tupple
- 
+                                                  child_dictionary['is_percentage'],\
+                                                      self.hard_code)) #adds item, var, and requires mapping as as tupple
+        
             row_num += 1
             
            
         print('Labels created')
-
-        #don't think I need this button
-        button = customtkinter.CTkButton(self, text="Save Field Mapping Rules")
-        button.grid(row=row_num, column=0)
-
-        button = customtkinter.CTkButton(self, text="Implement Field Mapping Rules")
-        button.grid(row=row_num, column=1)
-
-        button = customtkinter.CTkButton(self, text="Write Field Mapping Rules to Database")
-        button.grid(row=row_num, column=2)
-        
-        # # button = customtkinter.CTkButton(self, text="Open Value Mapping Rules Window", command=open_value_mappings_window)
-        # button = customtkinter.CTkButton(self, text="Open Value Mapping Rules Window")
-        # button.grid(row=row_num, column=3, columnspan=2)
-        
-        ####Load Tape Mapping Tool Excel File
-        # button = customtkinter.CTkButton(self, text="Save Mapping Rules", command=open_save_load_field_mappings_window)    
-        # # button.grid(row=row_num, column=0, columnspan=2)
-        # button.grid(row=row_num, column=1)
         
         print('Field Mapping Frame Loaded')
+    def keyboard_first_letter_select(self, event):
+        # print ('in keyboard_first_letter_select method')
+        combo = event.widget
+
+        # Get the typed letter from the event
+        letter = event.char.lower()
+
+        # Find the first list item that starts with the typed letter
+        for i, item in enumerate(combo['values']):
+            if item.lower().startswith(letter):
+                combo.current(i)  # Select the found item
+                break
+        # print ('letter: ', letter)
+        
         
     def get_field_mappings(self):
         return self.column_mapping_rules
+    
+    def get_DivideBy100Vars(self):
+        return self.DivideBy100Vars
 
+    def get_AllCurrentVar(self):
+        return self.AllCurrentVar
+    
+
+        
+    
 if __name__ == "__main__":
     print('in test mode')
     
