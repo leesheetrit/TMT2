@@ -10,6 +10,8 @@ import customtkinter
 import tkinter as tk
 import openpyxl as xl
 from tkinter import ttk
+
+from PrepTMT import PrepTMT
 from FieldMappingFrame import FieldMappingFrame
 from ValueMappingFrame import ValueMappingFrame
 from FieldMappingToDBFrame import FieldMappingToDBFrame
@@ -25,8 +27,9 @@ class NavigationFrame(customtkinter.CTkFrame):
         widgets.append(customtkinter.CTkLabel(self, text="Navigation Window"))
         #Buttons
         
-        widgets.append(customtkinter.CTkButton(self, text="Read Excel TMT File", \
-                                               command=self.master.reset_TMT))
+        #need to troubleshoot it seems that once I do this, the open field mappings window is still using the old tape file
+        widgets.append(customtkinter.CTkButton(self, text="Prep Excel TMT File", \
+                                               command=self.master.prep_TMT))
         
         widgets.append(customtkinter.CTkButton(self, text="Read Excel TMT File", \
                                                command=self.master.read_excel_TMT))    
@@ -87,8 +90,16 @@ class App(customtkinter.CTk):
         self.qrm_db= create_engine('mssql+pyodbc://CFAWSQRMSQL01/Servicing?driver=SQL+Server+Native+Client+11.0',
             fast_executemany = True)
         
-    def reset_TMT(self):
-        pass
+    def prep_TMT(self):
+        'Resetting Excel File'
+        
+        self.prepTMT_Window = PrepTMT(master=self,\
+                            wb_path = self.wb_path,\
+                            wb=self.wb,\
+                            tape_sheet = self.tape_sheet,\
+                            values_mapping_sheet = self.values_mapping_sheet)
+
+        self.prepTMT_Window.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
     
     def read_excel_TMT(self):
         print('Reading Excel TMT...')
