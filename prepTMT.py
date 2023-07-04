@@ -70,7 +70,22 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         
         # sheet_listbox = Listbox(self)
         optionmenu.grid(row=1, column=0)
+        
+    def merge_headers (self):
+        #7/4 edit
+        # Iterate over each column in the sheet
+        for column in range(1, self.raw_wb_LL_sheet.max_column + 1):
+        # Concatenate the values in row 1 and row 2
+            cell_value = str(self.raw_wb_LL_sheet.cell(row=1, column=column).value) + str(sheet.cell(row=2, column=column).value)
+    
+        # Update the cell value in row 1
+        self.raw_wb_LL_sheet.cell(row=1, column=column).value = cell_value
 
+        # Delete row 2
+        self.raw_wb_LL_sheet.delete_rows(2)
+
+        # Save the modified Excel file
+        workbook.save(filename='your_file.xlsx')
 
     def move_sheet(self, choice):
         print('moving sheet,',choice)
