@@ -35,9 +35,7 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         #Call Methods
         self.clear_file()
         self.select_LL_sheet()
-        if self.headers_merge_need:
-            self.merge_headers()
-        self.move_sheet()
+        
         
     def clear_file(self):
         
@@ -94,8 +92,14 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         workbook.save(filename='your_file.xlsx')
 
     def move_sheet(self, choice):
+        
         print('moving sheet,',choice)
         #self.wb.copy_worksheet(self.raw_wb[choice])
+        
+        self.raw_wb_LL_sheet = self.raw_wb[choice]
+        
+        if self.headers_merge_need:
+            self.merge_headers()
         
         destination_sheet = self.wb.create_sheet('Copied Sheet')
         destination_sheet.title = 'Tape'
