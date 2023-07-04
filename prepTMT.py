@@ -13,7 +13,8 @@ import openpyxl as xl
 
 class PrepTMT(customtkinter.CTkScrollableFrame):
     
-    def __init__(self,master,wb_path, wb, tape_sheet,values_mapping_sheet,**kwargs):
+    def __init__(self,master,wb_path, wb, tape_sheet,values_mapping_sheet,\
+        headers_merge_need = False, **kwargs):
         super().__init__(master, **kwargs)
         # super().__init__(master, **kwargs)
         
@@ -23,15 +24,20 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         self.wb = wb
         self.tape_sheet = tape_sheet
         self.values_mapping_sheet = values_mapping_sheet
+        self.headers_merge_need = headers_merge_need
 
         self.raw_file_path = ''
         self.raw_wb = ''
         self.raw_wb_sheet_names = ''
         self.raw_wb_LL_sheet = ''
         
+        
         #Call Methods
         self.clear_file()
         self.select_LL_sheet()
+        if self.headers_merge_need:
+            self.merge_headers()
+        self.move_sheet()
         
     def clear_file(self):
         
