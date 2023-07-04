@@ -244,9 +244,7 @@ class App(customtkinter.CTk):
         self.field_mappings_to_db_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
     
     def save_field_mappings_to_db(self):
-        
-        #1) not quite working, only seems to be writing FIRST Due to First Due
-        
+    
         print('in method save_field_mappings_to_db')
         self.sellers_name = self.field_mappings_to_db_frame.get_seller_name()
         print (self.sellers_name)
@@ -264,6 +262,24 @@ class App(customtkinter.CTk):
                 print('Wrote: ', dest_field,' - ', source_field.get())
         
         print('Field Mappings Written to Database')
+    
+        save_value_mappings_to_db()
+        
+    def save_value_mappings_to_db(self):
+        
+        for i, (dest_field, source_field, requires_mapping,is_percentage, hard_code) in enumerate(self.column_mappings_rules):
+        for i, (source_col_letter,source_col_name,unique_source_value1,dest_field_name,dest_field_value) in enumerate(self.value_mapping_rules):
+         
+             if dest_field_value.get() is not None and dest_field_value.get() != "":
+                insert_query = f"INSERT INTO Servicing.dbo.TMT_Value_Mappings \
+                    (Sellers_Name, Mappings_Name, Destination_Value, Source_Value) \
+                        VALUES \
+                            ('{self.sellers_name}', '{self.mappings_name}', '{dest_field_value.get()}', '{str(unique_source_value1)}')"
+                self.qrm_db.connect().execute(insert_query)
+                print('Wrote: ', dest_field_value.get(),' - ', str(unique_source_value1))
+        
+        print('Field Values Written to Database')
+    
     
     def open_value_mapping_frame(self):
         print('OpeValueMappingFrame Method Activated')
