@@ -83,6 +83,7 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         self.raw_wb_LL_sheet = self.raw_wb[choice]
         
         if self.headers_merge_need:
+            print('merging headers')
             self.merge_headers()
         
         destination_sheet = self.wb.create_sheet('Copied Sheet')
