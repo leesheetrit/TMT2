@@ -14,7 +14,7 @@ import openpyxl as xl
 class PrepTMT(customtkinter.CTkScrollableFrame):
     
     def __init__(self,master,wb_path, wb, tape_sheet,values_mapping_sheet,\
-        headers_merge_need = False, **kwargs):
+                 headers_merge_need = False, **kwargs):
         super().__init__(master, **kwargs)
         # super().__init__(master, **kwargs)
         
@@ -24,18 +24,16 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         self.wb = wb
         self.tape_sheet = tape_sheet
         self.values_mapping_sheet = values_mapping_sheet
-        self.headers_merge_need = headers_merge_need
 
         self.raw_file_path = ''
         self.raw_wb = ''
         self.raw_wb_sheet_names = ''
         self.raw_wb_LL_sheet = ''
-        
+        self.headers_merge_need = headers_merge_need
         
         #Call Methods
         self.clear_file()
         self.select_LL_sheet()
-        
         
     def clear_file(self):
         
@@ -74,44 +72,47 @@ class PrepTMT(customtkinter.CTkScrollableFrame):
         
         # sheet_listbox = Listbox(self)
         optionmenu.grid(row=1, column=0)
-        
+
+
     def move_sheet(self, choice):
-        
         print('moving sheet,',choice)
         #self.wb.copy_worksheet(self.raw_wb[choice])
         
+        destination_sheet = self.wb.create_sheet('Tape')
+        # destination_sheet.title = 'Tape'
+        
         self.raw_wb_LL_sheet = self.raw_wb[choice]
         
-        if self.headers_merge_need:
-            print('merging headers')
-            self.merge_headers()
+        print('raw_wb[choice]:', self.raw_wb[choice])
+        print('self.raw_wb_LL_sheet:', self.raw_wb_LL_sheet)
         
-        destination_sheet = self.wb.create_sheet('Copied Sheet')
-        destination_sheet.title = 'Tape'
-        
-        for row in self.raw_wb[choice].iter_rows(values_only=True):
+        for row in self.raw_wb_LL_sheet.iter_rows(values_only=True):
             # print(row)
             destination_sheet.append(row)
-    
+
+        if self.headers_merge_need:
+            print('merging headers')
+            #self.merge_headers()
+            for column in range(1, destination_sheet.max_column + 1):
+                
+                # Get the values from row 1 and row 2
+                value1 = destination_sheet.cell(row=1, column=column).value
+                value2 = destination_sheet.cell(row=2, column=column).value
+            # Concatenate the values in row 1 and row 2
+                #cell_value = str(destination_sheet.cell(row=1, column=column).value) + ' ' + str(destination_sheet.cell(row=2, column=column).value)
+                
+                if value1 is not None:
+                    cell_value = value1 + ' ' +  value2
+                else:
+                    cell_value =  value2
+                # Update the cell value in row 1
+                destination_sheet.cell(row=1, column=column).value = cell_value
+            
+            # Delete row 2
+            destination_sheet.delete_rows(2)
+
         self.wb.save(self.wb_path)
         print("Success", "Sheet copied and renamed as 'tape'.")
-     
-    def merge_headers (self):
-        #7/4 edit
-        # Iterate over each column in the sheet
-        for column in range(1, self.raw_wb_LL_sheet.max_column + 1):
-        # Concatenate the values in row 1 and row 2
-            cell_value = str(self.raw_wb_LL_sheet.cell(row=1, column=column).value) + str(sheet.cell(row=2, column=column).value)
-    
-            # Update the cell value in row 1
-            self.raw_wb_LL_sheet.cell(row=1, column=column).value = cell_value
-
-        # Delete row 2
-        self.raw_wb_LL_sheet.delete_rows(2)
-
-        # Save the modified Excel file
-        workbook.save(filename=self.raw_file_path) 
-          
-        # Load the workbook
-        self.raw_wb = xl.load_workbook(filename=self.raw_file_path)
         
+
+     
